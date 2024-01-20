@@ -1,0 +1,40 @@
+
+// APICall makes an API call with the provided parameters
+func APICall(url, methodType, jsonData string, headers []apiUtil.HeaderDetails, req *http.Request) (string, *http.Response, error) {
+	var response *http.Response
+	var body []byte
+	// Create a request with the specified method, URL, and JSON data
+	reqBody := bytes.NewBuffer([]byte(jsonData))
+	request, err := http.NewRequest(methodType, url, reqBody)
+	if err != nil {
+		return "", response, err
+	}
+
+	// Set additional headers
+	for _, header := range headers {
+		request.Header.Set(header.Key, header.Value)
+	}
+
+	// Copy cookies from the provided request to the new request
+	if req != nil {
+		request.Header.Set("Cookie", req.Header.Get("Cookie"))
+	}
+
+	// Perform the API call
+	client := &http.Client{}
+	response, err = client.Do(request)
+	if err != nil {
+		return "", response, err
+	} else {
+		defer response.Body.Close()
+		//log.Println("apiUtil.Header", response.Header)
+
+		body, err = ioutil.ReadAll(response.Body)
+		if err != nil {
+
+			return "", response, err
+		}
+	}
+
+	return string(body), response, nil
+}
